@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Kalkulator Averaging Saham</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2953/2953363.png" type="image/png">
+
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f8fafc; margin: 0; padding: 20px 16px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; }
+        .header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-size: 20px; color: #0f172a; font-weight: 700; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        input[type="number"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff; }
+        input[type="number"]:focus { border-color: #2563eb; }
+        .result-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 18px; margin-top: 22px; }
+        .result-title { font-size: 14px; font-weight: 700; color: #1d4ed8; margin-bottom: 12px; }
+        .result-row { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 8px; }
+        .result-row.highlight { font-size: 16px; font-weight: 800; color: #1e3a8a; border-top: 1px dashed #93c5fd; padding-top: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Averaging Saham</h2>
+    </div>
+
+    <div class="form-group">
+        <label>Harga Beli Awal (Rp/lembar)</label>
+        <input type="number" id="hargaAwal" placeholder="Contoh: 5000" oninput="hitung()">
+    </div>
+
+    <div class="form-group">
+        <label>Jumlah Lot Awal</label>
+        <input type="number" id="lotAwal" placeholder="Contoh: 10" oninput="hitung()">
+    </div>
+
+    <div class="form-group">
+        <label>Harga Beli Baru / Saat Ini (Rp/lembar)</label>
+        <input type="number" id="hargaSaatIni" placeholder="Contoh: 4200" oninput="hitung()">
+    </div>
+
+    <div class="form-group">
+        <label>Jumlah Lot yang Ingin Dibeli</label>
+        <input type="number" id="lotBeli" placeholder="Contoh: 5" oninput="hitung()">
+    </div>
+
+    <div class="result-box">
+        <div class="result-title">Hasil Perhitungan</div>
+        <div class="result-row">
+            <span>Modal Awal:</span>
+            <span id="modalAwal">Rp 0</span>
+        </div>
+        <div class="result-row">
+            <span>Total Lot Baru:</span>
+            <span id="totalLot">0 Lot</span>
+        </div>
+        <div class="result-row">
+            <span>Modal Tambahan:</span>
+            <span id="modalTambahan">Rp 0</span>
+        </div>
+        <div class="result-row">
+            <span>Total Nilai Modal:</span>
+            <span id="totalModal">Rp 0</span>
+        </div>
+        <div class="result-row highlight">
+            <span>Harga Rata-Rata Baru:</span>
+            <span id="hargaRataRata">Rp 0 / lembar</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatRupiah(val) {
+        return 'Rp ' + Number(val.toFixed(2)).toLocaleString('id-ID');
+    }
+
+    function hitung() {
+        const hargaAwal = parseFloat(document.getElementById('hargaAwal').value) || 0;
+        const lotAwal = parseFloat(document.getElementById('lotAwal').value) || 0;
+        const hargaSaatIni = parseFloat(document.getElementById('hargaSaatIni').value) || 0;
+        const lotBeli = parseFloat(document.getElementById('lotBeli').value) || 0;
+
+        const modalAwal = hargaAwal * lotAwal * 100;
+        const modalBaru = hargaSaatIni * lotBeli * 100;
+        const totalModal = modalAwal + modalBaru;
+        const totalLot = lotAwal + lotBeli;
+
+        const hargaAvg = totalLot > 0 ? (totalModal / (totalLot * 100)) : 0;
+
+        document.getElementById('modalAwal').innerText = formatRupiah(modalAwal);
+        document.getElementById('totalLot').innerText = totalLot.toLocaleString('id-ID') + ' Lot';
+        document.getElementById('modalTambahan').innerText = formatRupiah(modalBaru);
+        document.getElementById('totalModal').innerText = formatRupiah(totalModal);
+        document.getElementById('hargaRataRata').innerText = formatRupiah(hargaAvg) + ' / lembar';
+    }
+
+    // Registrasi Service Worker untuk PWA Offline
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch((err) => {
+                console.log('Service Worker gagal didaftarkan:', err);
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
