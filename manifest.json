@@ -1,6 +1,6 @@
 {
   "name": "Kalkulator Averaging Saham",
-  "short_name": "Avg Saham",
+  "short_name": "Saham Calc",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
