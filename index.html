@@ -4,87 +4,252 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kalkulator Averaging Saham</title>
+    <title>Kalkulator & Portofolio Saham</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2953/2953363.png" type="image/png">
 
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f8fafc; margin: 0; padding: 20px 16px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; }
-        .header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
-        .header h2 { margin: 0; font-size: 20px; color: #0f172a; font-weight: 700; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-        input[type="number"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff; }
-        input[type="number"]:focus { border-color: #2563eb; }
-        .result-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 18px; margin-top: 22px; }
-        .result-title { font-size: 14px; font-weight: 700; color: #1d4ed8; margin-bottom: 12px; }
-        .result-row { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 8px; }
-        .result-row.highlight { font-size: 16px; font-weight: 800; color: #1e3a8a; border-top: 1px dashed #93c5fd; padding-top: 10px; margin-top: 10px; }
+        body { background-color: #f8fafc; margin: 0; padding: 16px 12px 60px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { background: #ffffff; width: 100%; max-width: 440px; border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); height: fit-content; }
+        
+        .tab-bar { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; color: #64748b; background: transparent; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; background: #fff; }
+        input:focus, textarea:focus { border-color: #2563eb; }
+
+        .sub-tab-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+        .sub-tab-btn { flex: 1; padding: 7px 4px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 11px; font-weight: 700; color: #475569; background: #f8fafc; cursor: pointer; }
+        .sub-tab-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
+
+        .input-panel { display: none; }
+        .input-panel.active { display: block; }
+
+        .result-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-top: 18px; }
+        .result-title { font-size: 14px; font-weight: 700; color: #1d4ed8; margin-bottom: 10px; }
+        .result-row { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 7px; }
+        .result-row.highlight { font-size: 15px; font-weight: 800; color: #1e3a8a; border-top: 1px dashed #93c5fd; padding-top: 9px; margin-top: 9px; }
+
+        .summary-card { background: #0f172a; color: white; padding: 16px; border-radius: 14px; margin-bottom: 18px; }
+        .summary-title { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+        .summary-value { font-size: 20px; font-weight: 800; }
+        .summary-gain { font-size: 13px; font-weight: 600; margin-top: 6px; }
+
+        .btn-action { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-action:active { background: #1d4ed8; }
+
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 11px; border-radius: 7px; font-weight: 600; cursor: pointer; }
+
+        .stock-item { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 12px; }
+        .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .stock-code { font-weight: 800; font-size: 15px; color: #0f172a; }
+        .stock-actions { display: flex; gap: 5px; }
+        .btn-edit { background: #e0f2fe; color: #0284c7; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .btn-del { background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        
+        .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #64748b; }
+        .stock-grid b { color: #1e293b; }
+        .stock-gl { margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; }
+
+        .gain-pos { color: #16a34a; }
+        .gain-neg { color: #dc2626; }
+
+        /* Modal Edit */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; align-items: center; justify-content: center; padding: 16px; }
+        .modal.active { display: flex; }
+        .modal-body { background: #fff; width: 100%; max-width: 360px; border-radius: 16px; padding: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h2>Averaging Saham</h2>
+    <!-- Tab Navigasi -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchMainTab('avg')">Kalkulator Avg</button>
+        <button class="tab-btn" onclick="switchMainTab('porto')">Portofolio Saya</button>
     </div>
 
-    <div class="form-group">
-        <label>Harga Beli Awal (Rp/lembar)</label>
-        <input type="number" id="hargaAwal" placeholder="Contoh: 5000" oninput="hitung()">
-    </div>
-
-    <div class="form-group">
-        <label>Jumlah Lot Awal</label>
-        <input type="number" id="lotAwal" placeholder="Contoh: 10" oninput="hitung()">
-    </div>
-
-    <div class="form-group">
-        <label>Harga Beli Baru / Saat Ini (Rp/lembar)</label>
-        <input type="number" id="hargaSaatIni" placeholder="Contoh: 4200" oninput="hitung()">
-    </div>
-
-    <div class="form-group">
-        <label>Jumlah Lot yang Ingin Dibeli</label>
-        <input type="number" id="lotBeli" placeholder="Contoh: 5" oninput="hitung()">
-    </div>
-
-    <div class="result-box">
-        <div class="result-title">Hasil Perhitungan</div>
-        <div class="result-row">
-            <span>Modal Awal:</span>
-            <span id="modalAwal">Rp 0</span>
+    <!-- ================= TAB 1: KALKULATOR AVG ================= -->
+    <div id="tab-avg" class="tab-content active">
+        <div class="form-group">
+            <label>Harga Beli Awal (Rp/lembar)</label>
+            <input type="number" id="hargaAwal" placeholder="Contoh: 5000" oninput="hitungAvg()">
         </div>
-        <div class="result-row">
-            <span>Total Lot Baru:</span>
-            <span id="totalLot">0 Lot</span>
+
+        <div class="form-group">
+            <label>Jumlah Lot Awal</label>
+            <input type="number" id="lotAwal" placeholder="Contoh: 10" oninput="hitungAvg()">
         </div>
-        <div class="result-row">
-            <span>Modal Tambahan:</span>
-            <span id="modalTambahan">Rp 0</span>
+
+        <div class="form-group">
+            <label>Harga Beli Baru / Saat Ini (Rp/lembar)</label>
+            <input type="number" id="hargaSaatIni" placeholder="Contoh: 4200" oninput="hitungAvg()">
         </div>
-        <div class="result-row">
-            <span>Total Nilai Modal:</span>
-            <span id="totalModal">Rp 0</span>
+
+        <div class="form-group">
+            <label>Jumlah Lot yang Ingin Dibeli</label>
+            <input type="number" id="lotBeli" placeholder="Contoh: 5" oninput="hitungAvg()">
         </div>
-        <div class="result-row highlight">
-            <span>Harga Rata-Rata Baru:</span>
-            <span id="hargaRataRata">Rp 0 / lembar</span>
+
+        <div class="result-box">
+            <div class="result-title">Hasil Averaging</div>
+            <div class="result-row">
+                <span>Modal Awal:</span>
+                <span id="modalAwal">Rp 0</span>
+            </div>
+            <div class="result-row">
+                <span>Total Lot Baru:</span>
+                <span id="totalLot">0 Lot</span>
+            </div>
+            <div class="result-row">
+                <span>Modal Tambahan:</span>
+                <span id="modalTambahan">Rp 0</span>
+            </div>
+            <div class="result-row">
+                <span>Total Nilai Modal:</span>
+                <span id="totalModal">Rp 0</span>
+            </div>
+            <div class="result-row highlight">
+                <span>Harga Rata-Rata Baru:</span>
+                <span id="hargaRataRata">Rp 0 / lbr</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: PORTOFOLIO ================= -->
+    <div id="tab-porto" class="tab-content">
+        <div class="summary-card">
+            <div class="summary-title">Total Nilai Portofolio</div>
+            <div class="summary-value" id="totalNilaiPorto">Rp 0</div>
+            <div class="summary-gain" id="totalGainPorto">Total P/L: Rp 0 (0.00%)</div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 16px;">
+            <div class="sub-tab-bar">
+                <button class="sub-tab-btn active" onclick="switchInputPanel('manual')">Input Manual</button>
+                <button class="sub-tab-btn" onclick="switchInputPanel('csv')">Upload CSV</button>
+                <button class="sub-tab-btn" onclick="switchInputPanel('paste')">Smart Paste</button>
+            </div>
+
+            <!-- Input Manual -->
+            <div id="panel-manual" class="input-panel active">
+                <div class="form-group">
+                    <label>Kode Saham</label>
+                    <input type="text" id="portoKode" placeholder="Contoh: BBCA" style="text-transform: uppercase;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Jumlah Lot</label>
+                        <input type="number" id="portoLot" placeholder="Contoh: 100">
+                    </div>
+                    <div class="form-group">
+                        <label>Harga Avg (Rp)</label>
+                        <input type="number" id="portoAvg" placeholder="Contoh: 6400">
+                    </div>
+                </div>
+                <button class="btn-action" onclick="tambahManual()">+ Simpan ke List</button>
+            </div>
+
+            <!-- Upload CSV -->
+            <div id="panel-csv" class="input-panel">
+                <p style="font-size: 11px; color: #64748b; margin: 0 0 8px;">Format file: <code>KODE, LOT, AVG, [HARGA_PASAR]</code></p>
+                <input type="file" id="csvFileInput" accept=".csv, .txt" style="font-size: 12px; margin-bottom: 10px; width: 100%;">
+                <button class="btn-action" onclick="prosesFileCSV()">Import File CSV</button>
+            </div>
+
+            <!-- Smart Paste -->
+            <div id="panel-paste" class="input-panel">
+                <p style="font-size: 11px; color: #64748b; margin: 0 0 6px;">Format per baris: <code>KODE, LOT, AVG</code><br>Contoh: <code>BBCA, 100, 6400</code></p>
+                <textarea id="smartPasteText" rows="3" placeholder="BBCA, 100, 6400"></textarea>
+                <button class="btn-action" style="margin-top: 8px;" onclick="prosesSmartPaste()">Proses Teks</button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 700; font-size: 14px; color: #1e293b;">Daftar Saham</span>
+            <div style="display: flex; gap: 5px;">
+                <button class="btn-secondary" id="btnRefresh" onclick="refreshSemuaHarga()">🔄 Refresh Harga</button>
+                <button class="btn-secondary" onclick="exportDataCSV()">Export</button>
+                <button class="btn-secondary" style="color: #dc2626;" onclick="hapusSemuaSaham()">Reset</button>
+            </div>
+        </div>
+
+        <div id="stockListContainer"></div>
+    </div>
+</div>
+
+<!-- ================= MODAL EDIT SAHAM ================= -->
+<div id="modalEdit" class="modal">
+    <div class="modal-body">
+        <h3 style="margin: 0 0 14px; font-size: 16px; color: #0f172a;">Edit Data Saham</h3>
+        <input type="hidden" id="editIndex">
+        <div class="form-group">
+            <label>Kode Saham</label>
+            <input type="text" id="editKode" style="text-transform: uppercase;">
+        </div>
+        <div class="form-group">
+            <label>Jumlah Lot</label>
+            <input type="number" id="editLot">
+        </div>
+        <div class="form-group">
+            <label>Harga Avg (Rp)</label>
+            <input type="number" id="editAvg">
+        </div>
+        <div class="form-group">
+            <label>Harga Pasar Saat Ini (Rp)</label>
+            <input type="number" id="editCurrent">
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+            <button class="btn-secondary" style="flex: 1;" onclick="tutupModalEdit()">Batal</button>
+            <button class="btn-action" style="flex: 1;" onclick="simpanPerubahanEdit()">Simpan</button>
         </div>
     </div>
 </div>
 
 <script>
-    function formatRupiah(val) {
-        return 'Rp ' + Number(val.toFixed(2)).toLocaleString('id-ID');
+    function formatRp(val) {
+        return 'Rp ' + Number(val.toFixed(0)).toLocaleString('id-ID');
     }
 
-    function hitung() {
+    function switchMainTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        if (tab === 'avg') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-avg').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-porto').classList.add('active');
+            renderPorto();
+        }
+    }
+
+    function switchInputPanel(panel) {
+        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+
+        if (panel === 'manual') {
+            document.querySelectorAll('.sub-tab-btn')[0].classList.add('active');
+            document.getElementById('panel-manual').classList.add('active');
+        } else if (panel === 'csv') {
+            document.querySelectorAll('.sub-tab-btn')[1].classList.add('active');
+            document.getElementById('panel-csv').classList.add('active');
+        } else {
+            document.querySelectorAll('.sub-tab-btn')[2].classList.add('active');
+            document.getElementById('panel-paste').classList.add('active');
+        }
+    }
+
+    function hitungAvg() {
         const hargaAwal = parseFloat(document.getElementById('hargaAwal').value) || 0;
         const lotAwal = parseFloat(document.getElementById('lotAwal').value) || 0;
         const hargaSaatIni = parseFloat(document.getElementById('hargaSaatIni').value) || 0;
@@ -97,19 +262,266 @@
 
         const hargaAvg = totalLot > 0 ? (totalModal / (totalLot * 100)) : 0;
 
-        document.getElementById('modalAwal').innerText = formatRupiah(modalAwal);
+        document.getElementById('modalAwal').innerText = formatRp(modalAwal);
         document.getElementById('totalLot').innerText = totalLot.toLocaleString('id-ID') + ' Lot';
-        document.getElementById('modalTambahan').innerText = formatRupiah(modalBaru);
-        document.getElementById('totalModal').innerText = formatRupiah(totalModal);
-        document.getElementById('hargaRataRata').innerText = formatRupiah(hargaAvg) + ' / lembar';
+        document.getElementById('modalTambahan').innerText = formatRp(modalBaru);
+        document.getElementById('totalModal').innerText = formatRp(totalModal);
+        document.getElementById('hargaRataRata').innerText = formatRp(hargaAvg) + ' / lbr';
     }
 
-    // Registrasi Service Worker untuk PWA Offline
+    // --- FETCH HARGA SAHAM OTOMATIS ---
+    async function fetchHargaPasar(kode) {
+        const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
+        try {
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + cleanTicker + '.JK')}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const parsed = JSON.parse(data.contents);
+            return parsed.chart.result[0].meta.regularMarketPrice;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // --- DATA MANAGEMENT ---
+    let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
+
+    function simpanKeStorage() {
+        localStorage.setItem('my_stocks_portfolio', JSON.stringify(myStocks));
+        renderPorto();
+    }
+
+    // Input Cepat (Instan tanpa blocking)
+    function tambahManual() {
+        const kode = document.getElementById('portoKode').value.trim().toUpperCase();
+        const lot = parseFloat(document.getElementById('portoLot').value) || 0;
+        const avg = parseFloat(document.getElementById('portoAvg').value) || 0;
+
+        if (!kode || lot <= 0 || avg <= 0) {
+            alert('Mohon isi Kode Saham, Lot, dan Harga Avg.');
+            return;
+        }
+
+        // Langsung simpan ke daftar portofolio seketika
+        masukkanAtauUpdateSaham(kode, lot, avg, avg);
+
+        // Bersihkan form langsung agar bisa input saham berikutnya
+        document.getElementById('portoKode').value = '';
+        document.getElementById('portoLot').value = '';
+        document.getElementById('portoAvg').value = '';
+
+        // Ambil harga pasar di latar belakang
+        fetchHargaPasar(kode).then(hargaServer => {
+            if (hargaServer) {
+                masukkanAtauUpdateSaham(kode, lot, avg, hargaServer);
+            }
+        });
+    }
+
+    function prosesSmartPaste() {
+        const text = document.getElementById('smartPasteText').value.trim();
+        if (!text) return;
+
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            const cols = line.split(/[,\t;]+/).map(c => c.trim());
+            if (cols.length >= 2) {
+                const kode = cols[0].toUpperCase();
+                const lot = parseFloat(cols[1]);
+                const avg = parseFloat(cols[2]) || 0;
+                const current = cols.length >= 4 ? (parseFloat(cols[3]) || avg) : avg;
+
+                if (kode && !isNaN(lot) && avg > 0) {
+                    masukkanAtauUpdateSaham(kode, lot, avg, current);
+                    fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h); });
+                }
+            }
+        });
+        document.getElementById('smartPasteText').value = '';
+    }
+
+    function prosesFileCSV() {
+        const fileInput = document.getElementById('csvFileInput');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split(/\r\n|\n/);
+            lines.forEach(line => {
+                const cols = line.split(/[,\t;]+/).map(c => c.trim());
+                if (cols.length >= 3) {
+                    const kode = cols[0].toUpperCase();
+                    const lot = parseFloat(cols[1]);
+                    const avg = parseFloat(cols[2]);
+                    const current = cols.length >= 4 ? (parseFloat(cols[3]) || avg) : avg;
+
+                    if (kode !== 'KODE' && !isNaN(lot) && !isNaN(avg)) {
+                        masukkanAtauUpdateSaham(kode, lot, avg, current);
+                        fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h); });
+                    }
+                }
+            });
+            fileInput.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function masukkanAtauUpdateSaham(kode, lot, avg, current) {
+        const idx = myStocks.findIndex(s => s.kode === kode);
+        if (idx >= 0) {
+            myStocks[idx] = { kode, lot, avg, current };
+        } else {
+            myStocks.push({ kode, lot, avg, current });
+        }
+        simpanKeStorage();
+    }
+
+    // --- FITUR EDIT SAHAM ---
+    function bukaModalEdit(index) {
+        const stock = myStocks[index];
+        document.getElementById('editIndex').value = index;
+        document.getElementById('editKode').value = stock.kode;
+        document.getElementById('editLot').value = stock.lot;
+        document.getElementById('editAvg').value = stock.avg;
+        document.getElementById('editCurrent').value = stock.current;
+        document.getElementById('modalEdit').classList.add('active');
+    }
+
+    function tutupModalEdit() {
+        document.getElementById('modalEdit').classList.remove('active');
+    }
+
+    function simpanPerubahanEdit() {
+        const idx = parseInt(document.getElementById('editIndex').value);
+        const kode = document.getElementById('editKode').value.trim().toUpperCase();
+        const lot = parseFloat(document.getElementById('editLot').value) || 0;
+        const avg = parseFloat(document.getElementById('editAvg').value) || 0;
+        const current = parseFloat(document.getElementById('editCurrent').value) || avg;
+
+        if (!kode || lot <= 0 || avg <= 0) {
+            alert('Mohon isi seluruh data dengan benar.');
+            return;
+        }
+
+        myStocks[idx] = { kode, lot, avg, current };
+        simpanKeStorage();
+        tutupModalEdit();
+    }
+
+    async function refreshSemuaHarga() {
+        if (myStocks.length === 0) return;
+        const btn = document.getElementById('btnRefresh');
+        btn.innerText = 'Memuat...';
+        btn.disabled = true;
+
+        for (let i = 0; i < myStocks.length; i++) {
+            const harga = await fetchHargaPasar(myStocks[i].kode);
+            if (harga) myStocks[i].current = harga;
+        }
+
+        simpanKeStorage();
+        btn.innerText = '🔄 Refresh Harga';
+        btn.disabled = false;
+    }
+
+    function hapusSaham(index) {
+        if (confirm('Hapus saham ini dari daftar?')) {
+            myStocks.splice(index, 1);
+            simpanKeStorage();
+        }
+    }
+
+    function hapusSemuaSaham() {
+        if (myStocks.length === 0) return;
+        if (confirm('Hapus semua daftar saham?')) {
+            myStocks = [];
+            simpanKeStorage();
+        }
+    }
+
+    function exportDataCSV() {
+        if (myStocks.length === 0) return;
+        let csvContent = "data:text/csv;charset=utf-8,KODE,LOT,AVG,HARGA_PASAR\n";
+        myStocks.forEach(s => {
+            csvContent += `${s.kode},${s.lot},${s.avg},${s.current}\n`;
+        });
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", "portofolio_saham.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function renderPorto() {
+        const container = document.getElementById('stockListContainer');
+        container.innerHTML = '';
+
+        if (myStocks.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 13px; padding: 20px;">Belum ada saham yang disimpan.</div>';
+            hitungRingkasan();
+            return;
+        }
+
+        myStocks.forEach((stock, index) => {
+            const modal = stock.avg * stock.lot * 100;
+            const marketValue = stock.current * stock.lot * 100;
+            const gainRp = marketValue - modal;
+            const gainPct = modal > 0 ? (gainRp / modal) * 100 : 0;
+            const isProfit = gainRp >= 0;
+            const colorClass = isProfit ? 'gain-pos' : 'gain-neg';
+
+            const card = document.createElement('div');
+            card.className = 'stock-item';
+            card.innerHTML = `
+                <div class="stock-header">
+                    <span class="stock-code">${stock.kode}</span>
+                    <div class="stock-actions">
+                        <button class="btn-edit" onclick="bukaModalEdit(${index})">Edit</button>
+                        <button class="btn-del" onclick="hapusSaham(${index})">Hapus</button>
+                    </div>
+                </div>
+                <div class="stock-grid">
+                    <div>Lot: <b>${stock.lot.toLocaleString('id-ID')}</b></div>
+                    <div>Avg: <b>${formatRp(stock.avg)}</b></div>
+                    <div>Modal: <b>${formatRp(modal)}</b></div>
+                    <div>Harga Pasar: <b>${formatRp(stock.current)}</b></div>
+                </div>
+                <div class="stock-gl ${colorClass}">
+                    <span>Gain / Loss:</span>
+                    <span>${isProfit ? '+' : ''}${formatRp(gainRp)} (${gainPct.toFixed(2)}%)</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        hitungRingkasan();
+    }
+
+    function hitungRingkasan() {
+        let totalModal = 0;
+        let totalNilai = 0;
+
+        myStocks.forEach(s => {
+            totalModal += (s.avg * s.lot * 100);
+            totalNilai += (s.current * s.lot * 100);
+        });
+
+        const totalGainRp = totalNilai - totalModal;
+        const totalGainPct = totalModal > 0 ? (totalGainRp / totalModal) * 100 : 0;
+        const isProfit = totalGainRp >= 0;
+
+        document.getElementById('totalNilaiPorto').innerText = formatRp(totalNilai);
+        
+        const gainEl = document.getElementById('totalGainPorto');
+        gainEl.innerText = `Total P/L: ${isProfit ? '+' : ''}${formatRp(totalGainRp)} (${totalGainPct.toFixed(2)}%)`;
+        gainEl.style.color = isProfit ? '#4ade80' : '#f87171';
+    }
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch((err) => {
-                console.log('Service Worker gagal didaftarkan:', err);
-            });
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
         });
     }
 </script>
