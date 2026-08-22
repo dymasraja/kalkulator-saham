@@ -78,10 +78,14 @@
         .gain-neg { color: #dc2626; }
 
         /* Modal Base */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; align-items: center; justify-content: center; padding: 16px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-body { background: #fff; width: 100%; max-width: 380px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .modal-body { background: #fff; width: 100%; max-width: 390px; border-radius: 18px; padding: 20px; max-height: 85vh; overflow-y: auto; }
         .cat-manage-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 6px; }
+
+        /* Conflict Card Preview */
+        .compare-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 12px; color: #334155; }
+        .compare-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -216,6 +220,35 @@
         </div>
 
         <div id="stockListContainer"></div>
+    </div>
+</div>
+
+<!-- ================= MODAL DUPLIKAT (TIMPA ATAU TAMBAH/AVG) ================= -->
+<div id="modalDuplicate" class="modal">
+    <div class="modal-body">
+        <h3 style="margin: 0 0 8px; font-size: 16px; color: #0f172a;" id="dupModalTitle">Saham Sudah Terdaftar</h3>
+        <p style="font-size: 12px; color: #64748b; margin: 0 0 10px;" id="dupModalDesc"></p>
+
+        <div class="compare-box">
+            <div class="compare-row">
+                <span>Posisi Lama:</span>
+                <b id="dupOldInfo">-</b>
+            </div>
+            <div class="compare-row">
+                <span>Input Tambahan:</span>
+                <b id="dupNewInfo">-</b>
+            </div>
+            <div class="compare-row" style="border-top: 1px dashed #cbd5e1; padding-top: 6px; margin-top: 6px; color: #1d4ed8;">
+                <span>Hasil Averaging Baru:</span>
+                <b id="dupAvgInfo">-</b>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+            <button class="btn-action" onclick="eksekusiAveragingDuplikat()">➕ Tambah & Hitung Avg</button>
+            <button class="btn-secondary" style="padding: 10px; font-weight: 700;" onclick="eksekusiReplaceDuplikat()">🔄 Timpa Data Lama (Replace)</button>
+            <button class="btn-secondary" style="padding: 8px; color: #64748b;" onclick="tutupModalDuplicate()">Batal</button>
+        </div>
     </div>
 </div>
 
@@ -407,12 +440,11 @@
         }
     }
 
-    // --- PENGAMBILAN HARGA DENGAN 3 LAPIS PROXY FAILOVER ---
+    // --- PENGAMBILAN HARGA ---
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
         const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
 
-        // 1. CORSProxy Edge
         try {
             const ctrl = new AbortController();
             const tid = setTimeout(() => ctrl.abort(), 3000);
@@ -425,7 +457,6 @@
             }
         } catch (e) {}
 
-        // 2. AllOrigins Raw
         try {
             const ctrl = new AbortController();
             const tid = setTimeout(() => ctrl.abort(), 3000);
@@ -438,7 +469,6 @@
             }
         } catch (e) {}
 
-        // 3. AllOrigins Wrapped
         try {
             const ctrl = new AbortController();
             const tid = setTimeout(() => ctrl.abort(), 3000);
@@ -455,8 +485,9 @@
         return null;
     }
 
-    // --- LOCALSTORAGE & PORTOFOLIO ---
+    // --- DATA & PORTOFOLIO ---
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
+    let pendingDuplicate = null;
 
     function simpanKeStorage() {
         localStorage.setItem('my_stocks_portfolio', JSON.stringify(myStocks));
@@ -484,6 +515,7 @@
         }
     }
 
+    // --- INPUT MANUAL & CEK DUPLIKAT ---
     function tambahManual() {
         const kode = document.getElementById('portoKode').value.trim().toUpperCase();
         const kategori = document.getElementById('portoKategori').value;
@@ -495,20 +527,112 @@
             return;
         }
 
-        masukkanAtauUpdateSaham(kode, lot, avg, avg, kategori);
+        const existingIdx = myStocks.findIndex(s => s.kode === kode);
+        if (existingIdx >= 0) {
+            // Tampilkan Dialog Pilihan Averaging vs Replace
+            const old = myStocks[existingIdx];
+            const totalLotAvg = old.lot + lot;
+            const totalModalAvg = (old.avg * old.lot * 100) + (avg * lot * 100);
+            const newAvgPrice = totalModalAvg / (totalLotAvg * 100);
 
+            pendingDuplicate = {
+                index: existingIdx,
+                kode: kode,
+                kategori: kategori || old.kategori,
+                newLot: lot,
+                newAvg: avg,
+                combinedLot: totalLotAvg,
+                combinedAvg: Math.round(newAvgPrice),
+                current: old.current || avg
+            };
+
+            document.getElementById('dupModalTitle').innerText = `Saham ${kode} Sudah Ada`;
+            document.getElementById('dupModalDesc').innerText = `Pilih apakah Anda ingin menambahkan (averaging) atau mengganti seluruh data saham ${kode}.`;
+            document.getElementById('dupOldInfo').innerText = `${old.lot} Lot @ ${formatRp(old.avg)}`;
+            document.getElementById('dupNewInfo').innerText = `${lot} Lot @ ${formatRp(avg)}`;
+            document.getElementById('dupAvgInfo').innerText = `${totalLotAvg} Lot @ ${formatRp(newAvgPrice)}`;
+
+            document.getElementById('modalDuplicate').classList.add('active');
+            return;
+        }
+
+        // Jika saham baru
+        masukkanSahamBaru(kode, lot, avg, avg, kategori);
+        bersihkanFormManual();
+    }
+
+    function eksekusiAveragingDuplikat() {
+        if (!pendingDuplicate) return;
+        const p = pendingDuplicate;
+        myStocks[p.index].lot = p.combinedLot;
+        myStocks[p.index].avg = p.combinedAvg;
+        myStocks[p.index].kategori = p.kategori;
+        simpanKeStorage();
+
+        fetchHargaPasar(p.kode).then(h => {
+            if (h) {
+                myStocks[p.index].current = h;
+                simpanKeStorage();
+                catatWaktuUpdate();
+            }
+        });
+
+        tutupModalDuplicate();
+        bersihkanFormManual();
+    }
+
+    function eksekusiReplaceDuplikat() {
+        if (!pendingDuplicate) return;
+        const p = pendingDuplicate;
+        myStocks[p.index] = {
+            kode: p.kode,
+            lot: p.newLot,
+            avg: p.newAvg,
+            current: p.current,
+            kategori: p.kategori
+        };
+        simpanKeStorage();
+
+        fetchHargaPasar(p.kode).then(h => {
+            if (h) {
+                myStocks[p.index].current = h;
+                simpanKeStorage();
+                catatWaktuUpdate();
+            }
+        });
+
+        tutupModalDuplicate();
+        bersihkanFormManual();
+    }
+
+    function tutupModalDuplicate() {
+        pendingDuplicate = null;
+        document.getElementById('modalDuplicate').classList.remove('active');
+    }
+
+    function bersihkanFormManual() {
         document.getElementById('portoKode').value = '';
         document.getElementById('portoLot').value = '';
         document.getElementById('portoAvg').value = '';
+    }
+
+    function masukkanSahamBaru(kode, lot, avg, current, kategori) {
+        myStocks.push({ kode, lot, avg, current, kategori: kategori || 'Lainnya' });
+        simpanKeStorage();
 
         fetchHargaPasar(kode).then(hargaServer => {
             if (hargaServer) {
-                masukkanAtauUpdateSaham(kode, lot, avg, hargaServer, kategori);
-                catatWaktuUpdate();
+                const idx = myStocks.findIndex(s => s.kode === kode);
+                if (idx >= 0) {
+                    myStocks[idx].current = hargaServer;
+                    simpanKeStorage();
+                    catatWaktuUpdate();
+                }
             }
         });
     }
 
+    // --- SMART PASTE & CSV ---
     function prosesSmartPaste() {
         const text = document.getElementById('smartPasteText').value.trim();
         if (!text) return;
@@ -529,13 +653,20 @@
                 }
 
                 if (kode && !isNaN(lot) && avg > 0) {
-                    masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
-                    fetchHargaPasar(kode).then(h => { 
-                        if(h) {
-                            masukkanAtauUpdateSaham(kode, lot, avg, h, kategori);
-                            catatWaktuUpdate();
-                        }
-                    });
+                    const idx = myStocks.findIndex(s => s.kode === kode);
+                    if (idx >= 0) {
+                        // Otomatis Averaging untuk batch import
+                        const old = myStocks[idx];
+                        const totalLot = old.lot + lot;
+                        const totalModal = (old.avg * old.lot * 100) + (avg * lot * 100);
+                        myStocks[idx].lot = totalLot;
+                        myStocks[idx].avg = Math.round(totalModal / (totalLot * 100));
+                        myStocks[idx].kategori = kategori;
+                    } else {
+                        myStocks.push({ kode, lot, avg, current, kategori });
+                    }
+                    simpanKeStorage();
+                    fetchHargaPasar(kode).then(h => { if(h) { const i = myStocks.findIndex(s=>s.kode===kode); if(i>=0) { myStocks[i].current=h; simpanKeStorage(); catatWaktuUpdate(); }}});
                 }
             }
         });
@@ -565,13 +696,19 @@
                     }
 
                     if (kode !== 'KODE' && !isNaN(lot) && !isNaN(avg)) {
-                        masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
-                        fetchHargaPasar(kode).then(h => { 
-                            if(h) {
-                                masukkanAtauUpdateSaham(kode, lot, avg, h, kategori);
-                                catatWaktuUpdate();
-                            }
-                        });
+                        const idx = myStocks.findIndex(s => s.kode === kode);
+                        if (idx >= 0) {
+                            const old = myStocks[idx];
+                            const totalLot = old.lot + lot;
+                            const totalModal = (old.avg * old.lot * 100) + (avg * lot * 100);
+                            myStocks[idx].lot = totalLot;
+                            myStocks[idx].avg = Math.round(totalModal / (totalLot * 100));
+                            myStocks[idx].kategori = kategori;
+                        } else {
+                            myStocks.push({ kode, lot, avg, current, kategori });
+                        }
+                        simpanKeStorage();
+                        fetchHargaPasar(kode).then(h => { if(h) { const i = myStocks.findIndex(s=>s.kode===kode); if(i>=0) { myStocks[i].current=h; simpanKeStorage(); catatWaktuUpdate(); }}});
                     }
                 }
             });
@@ -580,17 +717,7 @@
         reader.readAsText(file);
     }
 
-    function masukkanAtauUpdateSaham(kode, lot, avg, current, kategori) {
-        const idx = myStocks.findIndex(s => s.kode === kode);
-        if (idx >= 0) {
-            myStocks[idx] = { kode, lot, avg, current, kategori: kategori || myStocks[idx].kategori || 'Lainnya' };
-        } else {
-            myStocks.push({ kode, lot, avg, current, kategori: kategori || 'Lainnya' });
-        }
-        simpanKeStorage();
-    }
-
-    // --- FITUR EDIT SAHAM ---
+    // --- FITUR EDIT ---
     function bukaModalEdit(index) {
         const stock = myStocks[index];
         document.getElementById('editIndex').value = index;
@@ -625,7 +752,7 @@
         tutupModalEdit();
     }
 
-    // --- REFRESH MULTI-THREAD (3 PARALEL + INDIKATOR PROGRES) ---
+    // --- REFRESH HARGA MULTI-THREAD ---
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
