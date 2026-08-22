@@ -7,8 +7,8 @@
     <title>Kalkulator & Portofolio Saham</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/10043/10043440.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/10043/10043440.png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3310/3310624.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3310/3310624.png">
 
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -223,7 +223,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL DUPLIKAT (TIMPA ATAU TAMBAH/AVG) ================= -->
+<!-- ================= MODAL DUPLIKAT ================= -->
 <div id="modalDuplicate" class="modal">
     <div class="modal-body">
         <h3 style="margin: 0 0 8px; font-size: 16px; color: #0f172a;" id="dupModalTitle">Saham Sudah Terdaftar</h3>
@@ -529,7 +529,6 @@
 
         const existingIdx = myStocks.findIndex(s => s.kode === kode);
         if (existingIdx >= 0) {
-            // Tampilkan Dialog Pilihan Averaging vs Replace
             const old = myStocks[existingIdx];
             const totalLotAvg = old.lot + lot;
             const totalModalAvg = (old.avg * old.lot * 100) + (avg * lot * 100);
@@ -556,7 +555,6 @@
             return;
         }
 
-        // Jika saham baru
         masukkanSahamBaru(kode, lot, avg, avg, kategori);
         bersihkanFormManual();
     }
@@ -655,7 +653,6 @@
                 if (kode && !isNaN(lot) && avg > 0) {
                     const idx = myStocks.findIndex(s => s.kode === kode);
                     if (idx >= 0) {
-                        // Otomatis Averaging untuk batch import
                         const old = myStocks[idx];
                         const totalLot = old.lot + lot;
                         const totalModal = (old.avg * old.lot * 100) + (avg * lot * 100);
