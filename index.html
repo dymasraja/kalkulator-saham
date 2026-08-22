@@ -23,8 +23,8 @@
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], textarea { width: 100%; padding: 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; background: #fff; }
-        input:focus, textarea:focus { border-color: #2563eb; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; background: #fff; }
+        input:focus, select:focus, textarea:focus { border-color: #2563eb; }
 
         .sub-tab-bar { display: flex; gap: 6px; margin-bottom: 12px; }
         .sub-tab-btn { flex: 1; padding: 7px 4px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 11px; font-weight: 700; color: #475569; background: #f8fafc; cursor: pointer; }
@@ -43,8 +43,8 @@
         .summary-value { font-size: 20px; font-weight: 800; }
         .summary-gain { font-size: 13px; font-weight: 600; margin-top: 6px; }
 
-        /* Kategori Summary */
-        .category-summary-title { font-size: 13px; font-weight: 700; color: #334155; margin: 14px 0 8px; }
+        .cat-header-wrap { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 8px; }
+        .category-summary-title { font-size: 13px; font-weight: 700; color: #334155; }
         .cat-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
         .cat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; }
         .cat-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
@@ -75,10 +75,11 @@
         .gain-pos { color: #16a34a; }
         .gain-neg { color: #dc2626; }
 
-        /* Modal Edit */
+        /* Modal Base */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-body { background: #fff; width: 100%; max-width: 360px; border-radius: 16px; padding: 20px; }
+        .modal-body { background: #fff; width: 100%; max-width: 380px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .cat-manage-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 6px; }
     </style>
 </head>
 <body>
@@ -139,15 +140,17 @@
 
     <!-- ================= TAB 2: PORTOFOLIO ================= -->
     <div id="tab-porto" class="tab-content">
-        <!-- Total Nilai Portofolio Keseluruhan -->
         <div class="summary-card">
             <div class="summary-title">Total Nilai Portofolio</div>
             <div class="summary-value" id="totalNilaiPorto">Rp 0</div>
             <div class="summary-gain" id="totalGainPorto">Total P/L: Rp 0 (0.00%)</div>
         </div>
 
-        <!-- Breakdown Total Per Kategori -->
-        <div class="category-summary-title">Performa Per Kategori / Sektor</div>
+        <!-- Breakdown Performa Kategori -->
+        <div class="cat-header-wrap">
+            <span class="category-summary-title">Performa Per Kategori</span>
+            <button class="btn-secondary" onclick="bukaModalKategori()">⚙️ Kelola Kategori</button>
+        </div>
         <div class="cat-summary-grid" id="categorySummaryContainer"></div>
 
         <!-- Box Input & Import Data -->
@@ -167,7 +170,7 @@
                     </div>
                     <div class="form-group">
                         <label>Kategori / Sektor</label>
-                        <input type="text" id="portoKategori" placeholder="Contoh: Tambang">
+                        <select id="portoKategori"></select>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -223,7 +226,7 @@
         </div>
         <div class="form-group">
             <label>Kategori / Sektor</label>
-            <input type="text" id="editKategori" placeholder="Contoh: Tambang, Properti, dll">
+            <select id="editKategori"></select>
         </div>
         <div class="form-group">
             <label>Jumlah Lot</label>
@@ -241,6 +244,24 @@
             <button class="btn-secondary" style="flex: 1;" onclick="tutupModalEdit()">Batal</button>
             <button class="btn-action" style="flex: 1;" onclick="simpanPerubahanEdit()">Simpan</button>
         </div>
+    </div>
+</div>
+
+<!-- ================= MODAL KELOLA KATEGORI ================= -->
+<div id="modalKategori" class="modal">
+    <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">Kelola Kategori</h3>
+            <button onclick="tutupModalKategori()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+            <input type="text" id="inputKategoriBaru" placeholder="Nama kategori baru..." style="padding: 9px 12px;">
+            <button class="btn-action" style="width: auto; padding: 0 16px;" onclick="tambahKategoriBaru()">Tambah</button>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px;">Daftar Kategori:</div>
+        <div id="categoryManageList"></div>
     </div>
 </div>
 
@@ -299,29 +320,121 @@
         document.getElementById('hargaRataRata').innerText = formatRp(hargaAvg) + ' / lbr';
     }
 
-    // --- FETCH CEPAT DENGAN TIMEOUT 4 DETIK ---
+    // --- MANAJEMEN KATEGORI ---
+    let myCategories = JSON.parse(localStorage.getItem('my_stock_categories')) || ['Tambang', 'Properti', 'Perbankan', 'Konsumer', 'Lainnya'];
+
+    function simpanKategoriKeStorage() {
+        localStorage.setItem('my_stock_categories', JSON.stringify(myCategories));
+        populateCategorySelects();
+    }
+
+    function populateCategorySelects() {
+        const selects = [document.getElementById('portoKategori'), document.getElementById('editKategori')];
+        selects.forEach(select => {
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '';
+            myCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                select.appendChild(opt);
+            });
+            if (currentVal && myCategories.includes(currentVal)) {
+                select.value = currentVal;
+            }
+        });
+    }
+
+    function bukaModalKategori() {
+        renderCategoryManageList();
+        document.getElementById('modalKategori').classList.add('active');
+    }
+
+    function tutupModalKategori() {
+        document.getElementById('modalKategori').classList.remove('active');
+    }
+
+    function renderCategoryManageList() {
+        const container = document.getElementById('categoryManageList');
+        container.innerHTML = '';
+        myCategories.forEach((cat, idx) => {
+            const row = document.createElement('div');
+            row.className = 'cat-manage-item';
+            row.innerHTML = `
+                <span style="font-weight: 600; font-size: 13px; color: #1e293b;">${cat}</span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn-del" onclick="hapusKategori(${idx})">Hapus</button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function tambahKategoriBaru() {
+        const input = document.getElementById('inputKategoriBaru');
+        const val = input.value.trim();
+        if (!val) return;
+        if (myCategories.includes(val)) {
+            alert('Kategori sudah ada.');
+            return;
+        }
+        myCategories.push(val);
+        simpanKategoriKeStorage();
+        renderCategoryManageList();
+        input.value = '';
+    }
+
+    function hapusKategori(index) {
+        if (myCategories.length <= 1) {
+            alert('Minimal harus ada 1 kategori tersisa.');
+            return;
+        }
+        const removed = myCategories[index];
+        if (confirm(`Hapus kategori "${removed}"? Saham dengan kategori ini akan dialihkan ke "Lainnya".`)) {
+            myCategories.splice(index, 1);
+            if (!myCategories.includes('Lainnya')) {
+                myCategories.push('Lainnya');
+            }
+            myStocks.forEach(s => {
+                if (s.kategori === removed) s.kategori = 'Lainnya';
+            });
+            simpanKeStorage();
+            simpanKategoriKeStorage();
+            renderCategoryManageList();
+        }
+    }
+
+    // --- FETCH HARGA DENGAN FALLBACK PROXY ---
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
 
+        // Coba Proxy 1 (AllOrigins)
         try {
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-            
-            const res = await fetch(proxyUrl, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            
+            const controller = new AbortController();
+            const tId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+            clearTimeout(tId);
             const data = await res.json();
             const parsed = JSON.parse(data.contents);
             return parsed.chart.result[0].meta.regularMarketPrice;
+        } catch (e) {}
+
+        // Fallback ke Proxy 2 jika Proxy 1 gagal
+        try {
+            const controller = new AbortController();
+            const tId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+            clearTimeout(tId);
+            const parsed = await res.json();
+            return parsed.chart.result[0].meta.regularMarketPrice;
         } catch (e) {
-            clearTimeout(timeoutId);
             return null;
         }
     }
 
-    // --- LOCALSTORAGE & LOGIKA PORTOFOLIO ---
+    // --- LOCALSTORAGE & PORTOFOLIO ---
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
 
     function simpanKeStorage() {
@@ -331,7 +444,7 @@
 
     function tambahManual() {
         const kode = document.getElementById('portoKode').value.trim().toUpperCase();
-        const kategori = document.getElementById('portoKategori').value.trim() || 'Lainnya';
+        const kategori = document.getElementById('portoKategori').value;
         const lot = parseFloat(document.getElementById('portoLot').value) || 0;
         const avg = parseFloat(document.getElementById('portoAvg').value) || 0;
 
@@ -343,7 +456,6 @@
         masukkanAtauUpdateSaham(kode, lot, avg, avg, kategori);
 
         document.getElementById('portoKode').value = '';
-        document.getElementById('portoKategori').value = '';
         document.getElementById('portoLot').value = '';
         document.getElementById('portoAvg').value = '';
 
@@ -365,8 +477,13 @@
                 const kode = cols[0].toUpperCase();
                 const lot = parseFloat(cols[1]);
                 const avg = parseFloat(cols[2]) || 0;
-                const kategori = cols[3] || 'Lainnya';
+                let kategori = cols[3] || 'Lainnya';
                 const current = cols.length >= 5 ? (parseFloat(cols[4]) || avg) : avg;
+
+                if (!myCategories.includes(kategori)) {
+                    myCategories.push(kategori);
+                    simpanKategoriKeStorage();
+                }
 
                 if (kode && !isNaN(lot) && avg > 0) {
                     masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
@@ -391,8 +508,13 @@
                     const kode = cols[0].toUpperCase();
                     const lot = parseFloat(cols[1]);
                     const avg = parseFloat(cols[2]);
-                    const kategori = cols[3] || 'Lainnya';
+                    let kategori = cols[3] || 'Lainnya';
                     const current = cols.length >= 5 ? (parseFloat(cols[4]) || avg) : avg;
+
+                    if (!myCategories.includes(kategori)) {
+                        myCategories.push(kategori);
+                        simpanKategoriKeStorage();
+                    }
 
                     if (kode !== 'KODE' && !isNaN(lot) && !isNaN(avg)) {
                         masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
@@ -415,11 +537,12 @@
         simpanKeStorage();
     }
 
-    // --- FITUR EDIT ---
+    // --- FITUR EDIT SAHAM ---
     function bukaModalEdit(index) {
         const stock = myStocks[index];
         document.getElementById('editIndex').value = index;
         document.getElementById('editKode').value = stock.kode;
+        populateCategorySelects();
         document.getElementById('editKategori').value = stock.kategori || 'Lainnya';
         document.getElementById('editLot').value = stock.lot;
         document.getElementById('editAvg').value = stock.avg;
@@ -434,7 +557,7 @@
     function simpanPerubahanEdit() {
         const idx = parseInt(document.getElementById('editIndex').value);
         const kode = document.getElementById('editKode').value.trim().toUpperCase();
-        const kategori = document.getElementById('editKategori').value.trim() || 'Lainnya';
+        const kategori = document.getElementById('editKategori').value || 'Lainnya';
         const lot = parseFloat(document.getElementById('editLot').value) || 0;
         const avg = parseFloat(document.getElementById('editAvg').value) || 0;
         const current = parseFloat(document.getElementById('editCurrent').value) || avg;
@@ -449,23 +572,23 @@
         tutupModalEdit();
     }
 
-    // --- REFRESH PARALEL (SERENTAK & CEPAT) ---
+    // --- REFRESH BERURUTAN (ANTI DROP/LEWAT) ---
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
-        btn.innerText = 'Memuat...';
         btn.disabled = true;
 
-        const promises = myStocks.map(async (stock) => {
-            const harga = await fetchHargaPasar(stock.kode);
+        for (let i = 0; i < myStocks.length; i++) {
+            btn.innerText = `Memuat (${i + 1}/${myStocks.length})...`;
+            const harga = await fetchHargaPasar(myStocks[i].kode);
             if (harga && harga > 0) {
-                stock.current = harga;
+                myStocks[i].current = harga;
+                simpanKeStorage();
             }
-        });
+            // Jeda 120ms agar proxy tidak memblokir IP
+            await new Promise(r => setTimeout(r, 120));
+        }
 
-        await Promise.allSettled(promises);
-
-        simpanKeStorage();
         btn.innerText = '🔄 Refresh';
         btn.disabled = false;
     }
@@ -604,6 +727,9 @@
             catContainer.appendChild(catCard);
         }
     }
+
+    // Inisialisasi awal Dropdown Kategori
+    populateCategorySelects();
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
