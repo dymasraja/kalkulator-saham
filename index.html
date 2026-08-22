@@ -299,21 +299,29 @@
         document.getElementById('hargaRataRata').innerText = formatRp(hargaAvg) + ' / lbr';
     }
 
-    // --- FETCH HARGA SAHAM REAL-TIME ---
+    // --- FETCH CEPAT DENGAN TIMEOUT 4 DETIK ---
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
         try {
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + cleanTicker + '.JK')}`;
-            const res = await fetch(url);
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            
+            const res = await fetch(proxyUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
             const data = await res.json();
             const parsed = JSON.parse(data.contents);
             return parsed.chart.result[0].meta.regularMarketPrice;
         } catch (e) {
+            clearTimeout(timeoutId);
             return null;
         }
     }
 
-    // --- LOCALSTORAGE & PORTOFOLIO ---
+    // --- LOCALSTORAGE & LOGIKA PORTOFOLIO ---
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
 
     function simpanKeStorage() {
@@ -407,7 +415,7 @@
         simpanKeStorage();
     }
 
-    // --- MODAL EDIT ---
+    // --- FITUR EDIT ---
     function bukaModalEdit(index) {
         const stock = myStocks[index];
         document.getElementById('editIndex').value = index;
@@ -441,16 +449,21 @@
         tutupModalEdit();
     }
 
+    // --- REFRESH PARALEL (SERENTAK & CEPAT) ---
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
         btn.innerText = 'Memuat...';
         btn.disabled = true;
 
-        for (let i = 0; i < myStocks.length; i++) {
-            const harga = await fetchHargaPasar(myStocks[i].kode);
-            if (harga) myStocks[i].current = harga;
-        }
+        const promises = myStocks.map(async (stock) => {
+            const harga = await fetchHargaPasar(stock.kode);
+            if (harga && harga > 0) {
+                stock.current = harga;
+            }
+        });
+
+        await Promise.allSettled(promises);
 
         simpanKeStorage();
         btn.innerText = '🔄 Refresh';
@@ -499,7 +512,6 @@
             return;
         }
 
-        // Render List Saham
         myStocks.forEach((stock, index) => {
             const modal = stock.avg * stock.lot * 100;
             const marketValue = stock.current * stock.lot * 100;
@@ -559,7 +571,6 @@
             categories[cat].count += 1;
         });
 
-        // Update Ringkasan Total
         const totalGainRp = totalNilai - totalModal;
         const totalGainPct = totalModal > 0 ? (totalGainRp / totalModal) * 100 : 0;
         const isProfit = totalGainRp >= 0;
@@ -569,7 +580,6 @@
         gainEl.innerText = `Total P/L: ${isProfit ? '+' : ''}${formatRp(totalGainRp)} (${totalGainPct.toFixed(2)}%)`;
         gainEl.style.color = isProfit ? '#4ade80' : '#f87171';
 
-        // Render Kartu Per Kategori
         const catContainer = document.getElementById('categorySummaryContainer');
         catContainer.innerHTML = '';
 
