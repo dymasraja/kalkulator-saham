@@ -43,6 +43,7 @@
         .summary-title { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
         .summary-value { font-size: 20px; font-weight: 800; }
         .summary-gain { font-size: 13px; font-weight: 600; margin-top: 6px; }
+        .last-updated { font-size: 11px; color: #94a3b8; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px; display: flex; align-items: center; gap: 4px; }
 
         .cat-header-wrap { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 8px; }
         .category-summary-title { font-size: 13px; font-weight: 700; color: #334155; }
@@ -141,10 +142,12 @@
 
     <!-- ================= TAB 2: PORTOFOLIO ================= -->
     <div id="tab-porto" class="tab-content">
+        <!-- Ringkasan Nilai Portofolio & Waktu Update -->
         <div class="summary-card">
             <div class="summary-title">Total Nilai Portofolio</div>
             <div class="summary-value" id="totalNilaiPorto">Rp 0</div>
             <div class="summary-gain" id="totalGainPorto">Total P/L: Rp 0 (0.00%)</div>
+            <div class="last-updated" id="lastUpdatedText">🕒 Terakhir update: Belum pernah</div>
         </div>
 
         <!-- Breakdown Performa Kategori -->
@@ -388,15 +391,13 @@
 
     function hapusKategori(index) {
         if (myCategories.length <= 1) {
-            alert('Minimal harus ada 1 kategori tersisa.');
+            alert('Minimal harus ada 1 kategori.');
             return;
         }
         const removed = myCategories[index];
-        if (confirm(`Hapus kategori "${removed}"? Saham dengan kategori ini akan dialihkan ke "Lainnya".`)) {
+        if (confirm(`Hapus kategori "${removed}"? Saham terkait akan dipindahkan ke kategori "Lainnya".`)) {
             myCategories.splice(index, 1);
-            if (!myCategories.includes('Lainnya')) {
-                myCategories.push('Lainnya');
-            }
+            if (!myCategories.includes('Lainnya')) myCategories.push('Lainnya');
             myStocks.forEach(s => {
                 if (s.kategori === removed) s.kategori = 'Lainnya';
             });
@@ -406,33 +407,52 @@
         }
     }
 
-    // --- FETCH HARGA DENGAN FALLBACK PROXY ---
+    // --- PENGAMBILAN HARGA DENGAN 3 LAPIS PROXY FAILOVER ---
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
         const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
 
-        // Coba Proxy 1 (AllOrigins)
+        // 1. CORSProxy Edge
         try {
-            const controller = new AbortController();
-            const tId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-            clearTimeout(tId);
-            const data = await res.json();
-            const parsed = JSON.parse(data.contents);
-            return parsed.chart.result[0].meta.regularMarketPrice;
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 3000);
+            const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (res.ok) {
+                const data = await res.json();
+                const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                if (p) return p;
+            }
         } catch (e) {}
 
-        // Fallback ke Proxy 2 jika Proxy 1 gagal
+        // 2. AllOrigins Raw
         try {
-            const controller = new AbortController();
-            const tId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-            clearTimeout(tId);
-            const parsed = await res.json();
-            return parsed.chart.result[0].meta.regularMarketPrice;
-        } catch (e) {
-            return null;
-        }
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 3000);
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (res.ok) {
+                const data = await res.json();
+                const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                if (p) return p;
+            }
+        } catch (e) {}
+
+        // 3. AllOrigins Wrapped
+        try {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 3000);
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (res.ok) {
+                const data = await res.json();
+                const parsed = JSON.parse(data.contents);
+                const p = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                if (p) return p;
+            }
+        } catch (e) {}
+
+        return null;
     }
 
     // --- LOCALSTORAGE & PORTOFOLIO ---
@@ -441,6 +461,27 @@
     function simpanKeStorage() {
         localStorage.setItem('my_stocks_portfolio', JSON.stringify(myStocks));
         renderPorto();
+    }
+
+    function catatWaktuUpdate() {
+        const now = new Date();
+        const formatted = now.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        localStorage.setItem('my_stocks_last_updated', formatted);
+        renderWaktuUpdate(formatted);
+    }
+
+    function renderWaktuUpdate(text) {
+        const el = document.getElementById('lastUpdatedText');
+        if (el) {
+            el.innerText = text ? `🕒 Terakhir update: ${text}` : '🕒 Terakhir update: Belum pernah';
+        }
     }
 
     function tambahManual() {
@@ -463,6 +504,7 @@
         fetchHargaPasar(kode).then(hargaServer => {
             if (hargaServer) {
                 masukkanAtauUpdateSaham(kode, lot, avg, hargaServer, kategori);
+                catatWaktuUpdate();
             }
         });
     }
@@ -488,7 +530,12 @@
 
                 if (kode && !isNaN(lot) && avg > 0) {
                     masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
-                    fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h, kategori); });
+                    fetchHargaPasar(kode).then(h => { 
+                        if(h) {
+                            masukkanAtauUpdateSaham(kode, lot, avg, h, kategori);
+                            catatWaktuUpdate();
+                        }
+                    });
                 }
             }
         });
@@ -519,7 +566,12 @@
 
                     if (kode !== 'KODE' && !isNaN(lot) && !isNaN(avg)) {
                         masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
-                        fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h, kategori); });
+                        fetchHargaPasar(kode).then(h => { 
+                            if(h) {
+                                masukkanAtauUpdateSaham(kode, lot, avg, h, kategori);
+                                catatWaktuUpdate();
+                            }
+                        });
                     }
                 }
             });
@@ -573,23 +625,39 @@
         tutupModalEdit();
     }
 
-    // --- REFRESH BERURUTAN (ANTI DROP/LEWAT) ---
+    // --- REFRESH MULTI-THREAD (3 PARALEL + INDIKATOR PROGRES) ---
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
         btn.disabled = true;
 
-        for (let i = 0; i < myStocks.length; i++) {
-            btn.innerText = `Memuat (${i + 1}/${myStocks.length})...`;
-            const harga = await fetchHargaPasar(myStocks[i].kode);
-            if (harga && harga > 0) {
-                myStocks[i].current = harga;
+        let index = 0;
+        let selesai = 0;
+        const total = myStocks.length;
+
+        async function worker() {
+            while (index < total) {
+                const i = index++;
+                const stock = myStocks[i];
+                const harga = await fetchHargaPasar(stock.kode);
+                if (harga && harga > 0) {
+                    stock.current = harga;
+                }
+                selesai++;
+                btn.innerText = `Memuat (${selesai}/${total})...`;
                 simpanKeStorage();
             }
-            // Jeda 120ms agar proxy tidak memblokir IP
-            await new Promise(r => setTimeout(r, 120));
         }
 
+        const concurrency = Math.min(3, total);
+        const pool = [];
+        for (let w = 0; w < concurrency; w++) {
+            pool.push(worker());
+        }
+
+        await Promise.all(pool);
+
+        catatWaktuUpdate();
         btn.innerText = '🔄 Refresh';
         btn.disabled = false;
     }
@@ -628,6 +696,9 @@
         const catContainer = document.getElementById('categorySummaryContainer');
         container.innerHTML = '';
         catContainer.innerHTML = '';
+
+        const savedTime = localStorage.getItem('my_stocks_last_updated');
+        renderWaktuUpdate(savedTime);
 
         if (myStocks.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 13px; padding: 20px;">Belum ada saham yang disimpan.</div>';
@@ -729,7 +800,6 @@
         }
     }
 
-    // Inisialisasi awal Dropdown Kategori
     populateCategorySelects();
 
     if ('serviceWorker' in navigator) {
