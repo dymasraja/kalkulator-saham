@@ -38,10 +38,20 @@
         .result-row { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 7px; }
         .result-row.highlight { font-size: 15px; font-weight: 800; color: #1e3a8a; border-top: 1px dashed #93c5fd; padding-top: 9px; margin-top: 9px; }
 
-        .summary-card { background: #0f172a; color: white; padding: 16px; border-radius: 14px; margin-bottom: 18px; }
+        .summary-card { background: #0f172a; color: white; padding: 16px; border-radius: 14px; margin-bottom: 14px; }
         .summary-title { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
         .summary-value { font-size: 20px; font-weight: 800; }
         .summary-gain { font-size: 13px; font-weight: 600; margin-top: 6px; }
+
+        /* Kategori Summary */
+        .category-summary-title { font-size: 13px; font-weight: 700; color: #334155; margin: 14px 0 8px; }
+        .cat-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .cat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; }
+        .cat-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .cat-name { font-size: 12px; font-weight: 700; color: #1e293b; }
+        .cat-count { font-size: 10px; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 20px; font-weight: 600; }
+        .cat-val { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+        .cat-pl { font-size: 11px; font-weight: 600; }
 
         .btn-action { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; }
         .btn-action:active { background: #1d4ed8; }
@@ -50,7 +60,10 @@
 
         .stock-item { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 12px; }
         .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .stock-title-wrap { display: flex; align-items: center; gap: 8px; }
         .stock-code { font-weight: 800; font-size: 15px; color: #0f172a; }
+        .category-badge { font-size: 10px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+        
         .stock-actions { display: flex; gap: 5px; }
         .btn-edit { background: #e0f2fe; color: #0284c7; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
         .btn-del { background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
@@ -126,12 +139,18 @@
 
     <!-- ================= TAB 2: PORTOFOLIO ================= -->
     <div id="tab-porto" class="tab-content">
+        <!-- Total Nilai Portofolio Keseluruhan -->
         <div class="summary-card">
             <div class="summary-title">Total Nilai Portofolio</div>
             <div class="summary-value" id="totalNilaiPorto">Rp 0</div>
             <div class="summary-gain" id="totalGainPorto">Total P/L: Rp 0 (0.00%)</div>
         </div>
 
+        <!-- Breakdown Total Per Kategori -->
+        <div class="category-summary-title">Performa Per Kategori / Sektor</div>
+        <div class="cat-summary-grid" id="categorySummaryContainer"></div>
+
+        <!-- Box Input & Import Data -->
         <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 16px;">
             <div class="sub-tab-bar">
                 <button class="sub-tab-btn active" onclick="switchInputPanel('manual')">Input Manual</button>
@@ -141,9 +160,15 @@
 
             <!-- Input Manual -->
             <div id="panel-manual" class="input-panel active">
-                <div class="form-group">
-                    <label>Kode Saham</label>
-                    <input type="text" id="portoKode" placeholder="Contoh: BBCA" style="text-transform: uppercase;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Kode Saham</label>
+                        <input type="text" id="portoKode" placeholder="Contoh: ADRO" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori / Sektor</label>
+                        <input type="text" id="portoKategori" placeholder="Contoh: Tambang">
+                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="form-group">
@@ -152,7 +177,7 @@
                     </div>
                     <div class="form-group">
                         <label>Harga Avg (Rp)</label>
-                        <input type="number" id="portoAvg" placeholder="Contoh: 6400">
+                        <input type="number" id="portoAvg" placeholder="Contoh: 2500">
                     </div>
                 </div>
                 <button class="btn-action" onclick="tambahManual()">+ Simpan ke List</button>
@@ -160,23 +185,24 @@
 
             <!-- Upload CSV -->
             <div id="panel-csv" class="input-panel">
-                <p style="font-size: 11px; color: #64748b; margin: 0 0 8px;">Format file: <code>KODE, LOT, AVG, [HARGA_PASAR]</code></p>
+                <p style="font-size: 11px; color: #64748b; margin: 0 0 8px;">Format file: <code>KODE, LOT, AVG, KATEGORI</code></p>
                 <input type="file" id="csvFileInput" accept=".csv, .txt" style="font-size: 12px; margin-bottom: 10px; width: 100%;">
                 <button class="btn-action" onclick="prosesFileCSV()">Import File CSV</button>
             </div>
 
             <!-- Smart Paste -->
             <div id="panel-paste" class="input-panel">
-                <p style="font-size: 11px; color: #64748b; margin: 0 0 6px;">Format per baris: <code>KODE, LOT, AVG</code><br>Contoh: <code>BBCA, 100, 6400</code></p>
-                <textarea id="smartPasteText" rows="3" placeholder="BBCA, 100, 6400"></textarea>
+                <p style="font-size: 11px; color: #64748b; margin: 0 0 6px;">Format baris: <code>KODE, LOT, AVG, KATEGORI</code><br>Contoh:<br><code>ADRO, 100, 2500, Tambang</code><br><code>PWON, 200, 450, Properti</code></p>
+                <textarea id="smartPasteText" rows="3" placeholder="ADRO, 100, 2500, Tambang"></textarea>
                 <button class="btn-action" style="margin-top: 8px;" onclick="prosesSmartPaste()">Proses Teks</button>
             </div>
         </div>
 
+        <!-- Tombol Aksi List -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="font-weight: 700; font-size: 14px; color: #1e293b;">Daftar Saham</span>
             <div style="display: flex; gap: 5px;">
-                <button class="btn-secondary" id="btnRefresh" onclick="refreshSemuaHarga()">🔄 Refresh Harga</button>
+                <button class="btn-secondary" id="btnRefresh" onclick="refreshSemuaHarga()">🔄 Refresh</button>
                 <button class="btn-secondary" onclick="exportDataCSV()">Export</button>
                 <button class="btn-secondary" style="color: #dc2626;" onclick="hapusSemuaSaham()">Reset</button>
             </div>
@@ -194,6 +220,10 @@
         <div class="form-group">
             <label>Kode Saham</label>
             <input type="text" id="editKode" style="text-transform: uppercase;">
+        </div>
+        <div class="form-group">
+            <label>Kategori / Sektor</label>
+            <input type="text" id="editKategori" placeholder="Contoh: Tambang, Properti, dll">
         </div>
         <div class="form-group">
             <label>Jumlah Lot</label>
@@ -269,7 +299,7 @@
         document.getElementById('hargaRataRata').innerText = formatRp(hargaAvg) + ' / lbr';
     }
 
-    // --- FETCH HARGA SAHAM OTOMATIS ---
+    // --- FETCH HARGA SAHAM REAL-TIME ---
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
         try {
@@ -283,7 +313,7 @@
         }
     }
 
-    // --- DATA MANAGEMENT ---
+    // --- LOCALSTORAGE & PORTOFOLIO ---
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
 
     function simpanKeStorage() {
@@ -291,9 +321,9 @@
         renderPorto();
     }
 
-    // Input Cepat (Instan tanpa blocking)
     function tambahManual() {
         const kode = document.getElementById('portoKode').value.trim().toUpperCase();
+        const kategori = document.getElementById('portoKategori').value.trim() || 'Lainnya';
         const lot = parseFloat(document.getElementById('portoLot').value) || 0;
         const avg = parseFloat(document.getElementById('portoAvg').value) || 0;
 
@@ -302,18 +332,16 @@
             return;
         }
 
-        // Langsung simpan ke daftar portofolio seketika
-        masukkanAtauUpdateSaham(kode, lot, avg, avg);
+        masukkanAtauUpdateSaham(kode, lot, avg, avg, kategori);
 
-        // Bersihkan form langsung agar bisa input saham berikutnya
         document.getElementById('portoKode').value = '';
+        document.getElementById('portoKategori').value = '';
         document.getElementById('portoLot').value = '';
         document.getElementById('portoAvg').value = '';
 
-        // Ambil harga pasar di latar belakang
         fetchHargaPasar(kode).then(hargaServer => {
             if (hargaServer) {
-                masukkanAtauUpdateSaham(kode, lot, avg, hargaServer);
+                masukkanAtauUpdateSaham(kode, lot, avg, hargaServer, kategori);
             }
         });
     }
@@ -329,11 +357,12 @@
                 const kode = cols[0].toUpperCase();
                 const lot = parseFloat(cols[1]);
                 const avg = parseFloat(cols[2]) || 0;
-                const current = cols.length >= 4 ? (parseFloat(cols[3]) || avg) : avg;
+                const kategori = cols[3] || 'Lainnya';
+                const current = cols.length >= 5 ? (parseFloat(cols[4]) || avg) : avg;
 
                 if (kode && !isNaN(lot) && avg > 0) {
-                    masukkanAtauUpdateSaham(kode, lot, avg, current);
-                    fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h); });
+                    masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
+                    fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h, kategori); });
                 }
             }
         });
@@ -354,11 +383,12 @@
                     const kode = cols[0].toUpperCase();
                     const lot = parseFloat(cols[1]);
                     const avg = parseFloat(cols[2]);
-                    const current = cols.length >= 4 ? (parseFloat(cols[3]) || avg) : avg;
+                    const kategori = cols[3] || 'Lainnya';
+                    const current = cols.length >= 5 ? (parseFloat(cols[4]) || avg) : avg;
 
                     if (kode !== 'KODE' && !isNaN(lot) && !isNaN(avg)) {
-                        masukkanAtauUpdateSaham(kode, lot, avg, current);
-                        fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h); });
+                        masukkanAtauUpdateSaham(kode, lot, avg, current, kategori);
+                        fetchHargaPasar(kode).then(h => { if(h) masukkanAtauUpdateSaham(kode, lot, avg, h, kategori); });
                     }
                 }
             });
@@ -367,21 +397,22 @@
         reader.readAsText(file);
     }
 
-    function masukkanAtauUpdateSaham(kode, lot, avg, current) {
+    function masukkanAtauUpdateSaham(kode, lot, avg, current, kategori) {
         const idx = myStocks.findIndex(s => s.kode === kode);
         if (idx >= 0) {
-            myStocks[idx] = { kode, lot, avg, current };
+            myStocks[idx] = { kode, lot, avg, current, kategori: kategori || myStocks[idx].kategori || 'Lainnya' };
         } else {
-            myStocks.push({ kode, lot, avg, current });
+            myStocks.push({ kode, lot, avg, current, kategori: kategori || 'Lainnya' });
         }
         simpanKeStorage();
     }
 
-    // --- FITUR EDIT SAHAM ---
+    // --- MODAL EDIT ---
     function bukaModalEdit(index) {
         const stock = myStocks[index];
         document.getElementById('editIndex').value = index;
         document.getElementById('editKode').value = stock.kode;
+        document.getElementById('editKategori').value = stock.kategori || 'Lainnya';
         document.getElementById('editLot').value = stock.lot;
         document.getElementById('editAvg').value = stock.avg;
         document.getElementById('editCurrent').value = stock.current;
@@ -395,6 +426,7 @@
     function simpanPerubahanEdit() {
         const idx = parseInt(document.getElementById('editIndex').value);
         const kode = document.getElementById('editKode').value.trim().toUpperCase();
+        const kategori = document.getElementById('editKategori').value.trim() || 'Lainnya';
         const lot = parseFloat(document.getElementById('editLot').value) || 0;
         const avg = parseFloat(document.getElementById('editAvg').value) || 0;
         const current = parseFloat(document.getElementById('editCurrent').value) || avg;
@@ -404,7 +436,7 @@
             return;
         }
 
-        myStocks[idx] = { kode, lot, avg, current };
+        myStocks[idx] = { kode, lot, avg, current, kategori };
         simpanKeStorage();
         tutupModalEdit();
     }
@@ -421,7 +453,7 @@
         }
 
         simpanKeStorage();
-        btn.innerText = '🔄 Refresh Harga';
+        btn.innerText = '🔄 Refresh';
         btn.disabled = false;
     }
 
@@ -442,9 +474,9 @@
 
     function exportDataCSV() {
         if (myStocks.length === 0) return;
-        let csvContent = "data:text/csv;charset=utf-8,KODE,LOT,AVG,HARGA_PASAR\n";
+        let csvContent = "data:text/csv;charset=utf-8,KODE,LOT,AVG,KATEGORI,HARGA_PASAR\n";
         myStocks.forEach(s => {
-            csvContent += `${s.kode},${s.lot},${s.avg},${s.current}\n`;
+            csvContent += `${s.kode},${s.lot},${s.avg},${s.kategori || 'Lainnya'},${s.current}\n`;
         });
         const link = document.createElement("a");
         link.setAttribute("href", encodeURI(csvContent));
@@ -456,14 +488,18 @@
 
     function renderPorto() {
         const container = document.getElementById('stockListContainer');
+        const catContainer = document.getElementById('categorySummaryContainer');
         container.innerHTML = '';
+        catContainer.innerHTML = '';
 
         if (myStocks.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 13px; padding: 20px;">Belum ada saham yang disimpan.</div>';
+            catContainer.innerHTML = '<div style="font-size: 12px; color: #94a3b8; grid-column: span 2;">Belum ada kategori.</div>';
             hitungRingkasan();
             return;
         }
 
+        // Render List Saham
         myStocks.forEach((stock, index) => {
             const modal = stock.avg * stock.lot * 100;
             const marketValue = stock.current * stock.lot * 100;
@@ -476,7 +512,10 @@
             card.className = 'stock-item';
             card.innerHTML = `
                 <div class="stock-header">
-                    <span class="stock-code">${stock.kode}</span>
+                    <div class="stock-title-wrap">
+                        <span class="stock-code">${stock.kode}</span>
+                        <span class="category-badge">${stock.kategori || 'Lainnya'}</span>
+                    </div>
                     <div class="stock-actions">
                         <button class="btn-edit" onclick="bukaModalEdit(${index})">Edit</button>
                         <button class="btn-del" onclick="hapusSaham(${index})">Hapus</button>
@@ -502,21 +541,58 @@
     function hitungRingkasan() {
         let totalModal = 0;
         let totalNilai = 0;
+        const categories = {};
 
         myStocks.forEach(s => {
-            totalModal += (s.avg * s.lot * 100);
-            totalNilai += (s.current * s.lot * 100);
+            const modal = s.avg * s.lot * 100;
+            const nilai = s.current * s.lot * 100;
+            const cat = (s.kategori && s.kategori.trim()) ? s.kategori.trim() : 'Lainnya';
+
+            totalModal += modal;
+            totalNilai += nilai;
+
+            if (!categories[cat]) {
+                categories[cat] = { modal: 0, nilai: 0, count: 0 };
+            }
+            categories[cat].modal += modal;
+            categories[cat].nilai += nilai;
+            categories[cat].count += 1;
         });
 
+        // Update Ringkasan Total
         const totalGainRp = totalNilai - totalModal;
         const totalGainPct = totalModal > 0 ? (totalGainRp / totalModal) * 100 : 0;
         const isProfit = totalGainRp >= 0;
 
         document.getElementById('totalNilaiPorto').innerText = formatRp(totalNilai);
-        
         const gainEl = document.getElementById('totalGainPorto');
         gainEl.innerText = `Total P/L: ${isProfit ? '+' : ''}${formatRp(totalGainRp)} (${totalGainPct.toFixed(2)}%)`;
         gainEl.style.color = isProfit ? '#4ade80' : '#f87171';
+
+        // Render Kartu Per Kategori
+        const catContainer = document.getElementById('categorySummaryContainer');
+        catContainer.innerHTML = '';
+
+        for (const [catName, data] of Object.entries(categories)) {
+            const catGainRp = data.nilai - data.modal;
+            const catGainPct = data.modal > 0 ? (catGainRp / data.modal) * 100 : 0;
+            const isCatProfit = catGainRp >= 0;
+            const color = isCatProfit ? '#16a34a' : '#dc2626';
+
+            const catCard = document.createElement('div');
+            catCard.className = 'cat-card';
+            catCard.innerHTML = `
+                <div class="cat-card-header">
+                    <span class="cat-name">${catName}</span>
+                    <span class="cat-count">${data.count} Saham</span>
+                </div>
+                <div class="cat-val">${formatRp(data.nilai)}</div>
+                <div class="cat-pl" style="color: ${color};">
+                    ${isCatProfit ? '+' : ''}${formatRp(catGainRp)} (${catGainPct.toFixed(2)}%)
+                </div>
+            `;
+            catContainer.appendChild(catCard);
+        }
     }
 
     if ('serviceWorker' in navigator) {
