@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<link rel="manifest" href="manifest.json?v=2">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb">
     <title>Kalkulator & Portofolio Saham</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=2">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3310/3310624.png" type="image/png">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3310/3310624.png">
 
@@ -77,13 +77,11 @@
         .gain-pos { color: #16a34a; }
         .gain-neg { color: #dc2626; }
 
-        /* Modal Base */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
         .modal-body { background: #fff; width: 100%; max-width: 390px; border-radius: 18px; padding: 20px; max-height: 85vh; overflow-y: auto; }
         .cat-manage-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 6px; }
 
-        /* Conflict Card Preview */
         .compare-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 12px; color: #334155; }
         .compare-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
     </style>
@@ -91,13 +89,12 @@
 <body>
 
 <div class="container">
-    <!-- Tab Navigasi -->
     <div class="tab-bar">
         <button class="tab-btn active" onclick="switchMainTab('avg')">Kalkulator Avg</button>
         <button class="tab-btn" onclick="switchMainTab('porto')">Portofolio Saya</button>
     </div>
 
-    <!-- ================= TAB 1: KALKULATOR AVG ================= -->
+    <!-- TAB 1: KALKULATOR AVG -->
     <div id="tab-avg" class="tab-content active">
         <div class="form-group">
             <label>Harga Beli Awal (Rp/lembar)</label>
@@ -144,9 +141,8 @@
         </div>
     </div>
 
-    <!-- ================= TAB 2: PORTOFOLIO ================= -->
+    <!-- TAB 2: PORTOFOLIO -->
     <div id="tab-porto" class="tab-content">
-        <!-- Ringkasan Nilai Portofolio & Waktu Update -->
         <div class="summary-card">
             <div class="summary-title">Total Nilai Portofolio</div>
             <div class="summary-value" id="totalNilaiPorto">Rp 0</div>
@@ -154,14 +150,12 @@
             <div class="last-updated" id="lastUpdatedText">🕒 Terakhir update: Belum pernah</div>
         </div>
 
-        <!-- Breakdown Performa Kategori -->
         <div class="cat-header-wrap">
             <span class="category-summary-title">Performa Per Kategori</span>
             <button class="btn-secondary" onclick="bukaModalKategori()">⚙️ Kelola Kategori</button>
         </div>
         <div class="cat-summary-grid" id="categorySummaryContainer"></div>
 
-        <!-- Box Input & Import Data -->
         <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 16px;">
             <div class="sub-tab-bar">
                 <button class="sub-tab-btn active" onclick="switchInputPanel('manual')">Input Manual</button>
@@ -169,7 +163,6 @@
                 <button class="sub-tab-btn" onclick="switchInputPanel('paste')">Smart Paste</button>
             </div>
 
-            <!-- Input Manual -->
             <div id="panel-manual" class="input-panel active">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="form-group">
@@ -194,22 +187,19 @@
                 <button class="btn-action" onclick="tambahManual()">+ Simpan ke List</button>
             </div>
 
-            <!-- Upload CSV -->
             <div id="panel-csv" class="input-panel">
                 <p style="font-size: 11px; color: #64748b; margin: 0 0 8px;">Format file: <code>KODE, LOT, AVG, KATEGORI</code></p>
                 <input type="file" id="csvFileInput" accept=".csv, .txt" style="font-size: 12px; margin-bottom: 10px; width: 100%;">
                 <button class="btn-action" onclick="prosesFileCSV()">Import File CSV</button>
             </div>
 
-            <!-- Smart Paste -->
             <div id="panel-paste" class="input-panel">
-                <p style="font-size: 11px; color: #64748b; margin: 0 0 6px;">Format baris: <code>KODE, LOT, AVG, KATEGORI</code><br>Contoh:<br><code>ADRO, 100, 2500, Tambang</code><br><code>PWON, 200, 450, Properti</code></p>
+                <p style="font-size: 11px; color: #64748b; margin: 0 0 6px;">Format baris: <code>KODE, LOT, AVG, KATEGORI</code><br>Contoh:<br><code>ADRO, 100, 2500, Tambang</code></p>
                 <textarea id="smartPasteText" rows="3" placeholder="ADRO, 100, 2500, Tambang"></textarea>
                 <button class="btn-action" style="margin-top: 8px;" onclick="prosesSmartPaste()">Proses Teks</button>
             </div>
         </div>
 
-        <!-- Tombol Aksi List -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="font-weight: 700; font-size: 14px; color: #1e293b;">Daftar Saham</span>
             <div style="display: flex; gap: 5px;">
@@ -223,7 +213,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL DUPLIKAT ================= -->
+<!-- MODAL DUPLIKAT -->
 <div id="modalDuplicate" class="modal">
     <div class="modal-body">
         <h3 style="margin: 0 0 8px; font-size: 16px; color: #0f172a;" id="dupModalTitle">Saham Sudah Terdaftar</h3>
@@ -252,7 +242,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL EDIT SAHAM ================= -->
+<!-- MODAL EDIT SAHAM -->
 <div id="modalEdit" class="modal">
     <div class="modal-body">
         <h3 style="margin: 0 0 14px; font-size: 16px; color: #0f172a;">Edit Data Saham</h3>
@@ -284,7 +274,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL KELOLA KATEGORI ================= -->
+<!-- MODAL KELOLA KATEGORI -->
 <div id="modalKategori" class="modal">
     <div class="modal-body">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -357,7 +347,7 @@
         document.getElementById('hargaRataRata').innerText = formatRp(hargaAvg) + ' / lbr';
     }
 
-    // --- MANAJEMEN KATEGORI ---
+    // MANAJEMEN KATEGORI
     let myCategories = JSON.parse(localStorage.getItem('my_stock_categories')) || ['Tambang', 'Properti', 'Perbankan', 'Konsumer', 'Lainnya'];
 
     function simpanKategoriKeStorage() {
@@ -440,52 +430,37 @@
         }
     }
 
-    // --- PENGAMBILAN HARGA ---
+    // PENGAMBILAN HARGA TANGGUH DENGAN ROTASI 3 PROXY
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
-        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK`;
+        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK?interval=1d&range=1d`;
 
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 3000);
-            const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (res.ok) {
-                const data = await res.json();
-                const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                if (p) return p;
+        const proxyEndpoints = [
+            url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+            url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+        ];
+
+        for (const makeUrl of proxyEndpoints) {
+            try {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 5000);
+                const res = await fetch(makeUrl(targetUrl), { signal: ctrl.signal });
+                clearTimeout(tid);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                    if (price && price > 0) return price;
+                }
+            } catch (e) {
+                // Lewati dan coba proxy berikutnya
             }
-        } catch (e) {}
-
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 3000);
-            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (res.ok) {
-                const data = await res.json();
-                const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                if (p) return p;
-            }
-        } catch (e) {}
-
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 3000);
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (res.ok) {
-                const data = await res.json();
-                const parsed = JSON.parse(data.contents);
-                const p = parsed?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                if (p) return p;
-            }
-        } catch (e) {}
-
+        }
         return null;
     }
 
-    // --- DATA & PORTOFOLIO ---
+    // DATA & PORTOFOLIO
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
     let pendingDuplicate = null;
 
@@ -515,7 +490,6 @@
         }
     }
 
-    // --- INPUT MANUAL & CEK DUPLIKAT ---
     function tambahManual() {
         const kode = document.getElementById('portoKode').value.trim().toUpperCase();
         const kategori = document.getElementById('portoKategori').value;
@@ -546,7 +520,7 @@
             };
 
             document.getElementById('dupModalTitle').innerText = `Saham ${kode} Sudah Ada`;
-            document.getElementById('dupModalDesc').innerText = `Pilih apakah Anda ingin menambahkan (averaging) atau mengganti seluruh data saham ${kode}.`;
+            document.getElementById('dupModalDesc').innerText = `Pilih apakah Anda ingin menambahkan averaging atau mengganti seluruh data saham ${kode}.`;
             document.getElementById('dupOldInfo').innerText = `${old.lot} Lot @ ${formatRp(old.avg)}`;
             document.getElementById('dupNewInfo').innerText = `${lot} Lot @ ${formatRp(avg)}`;
             document.getElementById('dupAvgInfo').innerText = `${totalLotAvg} Lot @ ${formatRp(newAvgPrice)}`;
@@ -630,7 +604,6 @@
         });
     }
 
-    // --- SMART PASTE & CSV ---
     function prosesSmartPaste() {
         const text = document.getElementById('smartPasteText').value.trim();
         if (!text) return;
@@ -714,7 +687,6 @@
         reader.readAsText(file);
     }
 
-    // --- FITUR EDIT ---
     function bukaModalEdit(index) {
         const stock = myStocks[index];
         document.getElementById('editIndex').value = index;
@@ -749,37 +721,22 @@
         tutupModalEdit();
     }
 
-    // --- REFRESH HARGA MULTI-THREAD ---
+    // REFRESH HARGA BERURUTAN AGAR TIDAK DIBLOKIR PROXY
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
         btn.disabled = true;
 
-        let index = 0;
-        let selesai = 0;
-        const total = myStocks.length;
-
-        async function worker() {
-            while (index < total) {
-                const i = index++;
-                const stock = myStocks[i];
-                const harga = await fetchHargaPasar(stock.kode);
-                if (harga && harga > 0) {
-                    stock.current = harga;
-                }
-                selesai++;
-                btn.innerText = `Memuat (${selesai}/${total})...`;
+        for (let i = 0; i < myStocks.length; i++) {
+            btn.innerText = `Memuat (${i + 1}/${myStocks.length})...`;
+            const stock = myStocks[i];
+            const harga = await fetchHargaPasar(stock.kode);
+            if (harga && harga > 0) {
+                stock.current = harga;
                 simpanKeStorage();
             }
+            await new Promise(r => setTimeout(r, 200));
         }
-
-        const concurrency = Math.min(3, total);
-        const pool = [];
-        for (let w = 0; w < concurrency; w++) {
-            pool.push(worker());
-        }
-
-        await Promise.all(pool);
 
         catatWaktuUpdate();
         btn.innerText = '🔄 Refresh';
