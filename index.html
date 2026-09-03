@@ -430,7 +430,7 @@
         }
     }
 
-    // PENGAMBILAN HARGA TANGGUH DENGAN ROTASI 3 PROXY
+    // PENGAMBILAN HARGA
     async function fetchHargaPasar(kode) {
         const cleanTicker = kode.trim().toUpperCase().replace('.JK', '');
         const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}.JK?interval=1d&range=1d`;
@@ -453,18 +453,20 @@
                     const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
                     if (price && price > 0) return price;
                 }
-            } catch (e) {
-                // Lewati dan coba proxy berikutnya
-            }
+            } catch (e) {}
         }
         return null;
     }
 
-    // DATA & PORTOFOLIO
+    // DATA & PORTOFOLIO DENGAN PENGURUTAN ALFABETIS (A-Z)
     let myStocks = JSON.parse(localStorage.getItem('my_stocks_portfolio')) || [];
+    myStocks.sort((a, b) => a.kode.localeCompare(b.kode));
+
     let pendingDuplicate = null;
 
     function simpanKeStorage() {
+        // Mengurutkan saham sesuai alfabet sebelum disimpan dan ditampilkan
+        myStocks.sort((a, b) => a.kode.localeCompare(b.kode));
         localStorage.setItem('my_stocks_portfolio', JSON.stringify(myStocks));
         renderPorto();
     }
@@ -543,9 +545,12 @@
 
         fetchHargaPasar(p.kode).then(h => {
             if (h) {
-                myStocks[p.index].current = h;
-                simpanKeStorage();
-                catatWaktuUpdate();
+                const idx = myStocks.findIndex(s => s.kode === p.kode);
+                if (idx >= 0) {
+                    myStocks[idx].current = h;
+                    simpanKeStorage();
+                    catatWaktuUpdate();
+                }
             }
         });
 
@@ -567,9 +572,12 @@
 
         fetchHargaPasar(p.kode).then(h => {
             if (h) {
-                myStocks[p.index].current = h;
-                simpanKeStorage();
-                catatWaktuUpdate();
+                const idx = myStocks.findIndex(s => s.kode === p.kode);
+                if (idx >= 0) {
+                    myStocks[idx].current = h;
+                    simpanKeStorage();
+                    catatWaktuUpdate();
+                }
             }
         });
 
@@ -721,7 +729,6 @@
         tutupModalEdit();
     }
 
-    // REFRESH HARGA BERURUTAN AGAR TIDAK DIBLOKIR PROXY
     async function refreshSemuaHarga() {
         if (myStocks.length === 0) return;
         const btn = document.getElementById('btnRefresh');
